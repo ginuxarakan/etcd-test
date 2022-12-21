@@ -25,7 +25,9 @@ func main() {
 
 	//GetSingleValueDemo(ctx, kv)
 
-	GetMultipleValuesWithPaginationDemo(ctx, kv)
+	//GetMultipleValuesWithPaginationDemo(ctx, kv)
+
+	LeaseDemo(ctx, cli, kv)
 }
 
 func GetSingleValueDemo(ctx context.Context, kv client.KV) {
@@ -124,5 +126,35 @@ func GetMultipleValuesWithPaginationDemoExp(ctx context.Context, kv client.KV) {
 	// Skipping the first item, which the last item from from the previous Get
 	for _, item := range gr.Kvs[1:] {
 		fmt.Println(string(item.Key), string(item.Value))
+	}
+}
+
+func LeaseDemo(ctx context.Context, cli *client.Client, kv client.KV) {
+	fmt.Println("Lease Demo -------------- ")
+
+	// Delete all keys
+	kv.Delete(ctx, "test:micky", client.WithPrefix())
+
+	gr, _ := kv.Get(ctx, "test:micky")
+	if len(gr.Kvs) == 0 {
+		fmt.Println("There's no keys.")
+	}
+
+	lease, _ := cli.Grant(ctx, 1)
+
+	// Insert key with a lease of 1 second TTL
+	kv.Put(ctx, "test:micky", "diamond micky 777", client.WithLease(lease.ID))
+
+	gr, _ = kv.Get(ctx, "test:micky")
+	if len(gr.Kvs) == 1 {
+		fmt.Println("Found Key.")
+	}
+
+	// Let the TTL expire
+	time.Sleep(time.Second * 3)
+
+	gr, _ = kv.Get(ctx, "test:micky")
+	if len(gr.Kvs) == 0 {
+		fmt.Println("No more keys.")
 	}
 }
