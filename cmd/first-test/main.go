@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	client "go.etcd.io/etcd/client/v3"
+	"strconv"
 	"time"
 )
 
@@ -22,7 +23,9 @@ func main() {
 
 	kv := client.NewKV(cli)
 
-	GetSingleValueDemo(ctx, kv)
+	//GetSingleValueDemo(ctx, kv)
+
+	GetMultipleValuesWithPaginationDemo(ctx, kv)
 }
 
 func GetSingleValueDemo(ctx context.Context, kv client.KV) {
@@ -48,4 +51,78 @@ func GetSingleValueDemo(ctx context.Context, kv client.KV) {
 
 	// Get the value of the previous revision
 	gr, _ = kv.Get(ctx, "micky", client.WithRev(rev))
+}
+
+func GetMultipleValuesWithPaginationDemo(ctx context.Context, kv client.KV) {
+	fmt.Println("Get multiple values demo .............. ")
+
+	// Delete all keys
+	kv.Delete(ctx, "test:key:", client.WithPrefix())
+
+	// Insert multiple keys
+	for i := 0; i < 20; i++ {
+		k := fmt.Sprintf("test:key:%02d", i)
+		kv.Put(ctx, k, strconv.Itoa(i))
+	}
+
+	opts := []client.OpOption{
+		client.WithFromKey(),
+		client.WithSort(client.SortByKey, client.SortAscend),
+		client.WithLimit(5),
+	}
+
+	gr, _ := kv.Get(ctx, "test:key:", opts...)
+	fmt.Println("First Page ---------------- ")
+	for _, item := range gr.Kvs {
+		fmt.Println(string(item.Key), " ", string(item.Value))
+	}
+
+	lastKey := string(gr.Kvs[len(gr.Kvs)-1].Key)
+
+	fmt.Println("last key: ", lastKey)
+
+	fmt.Println("Second Page --------------- ")
+	opts = append(opts, client.WithFromKey())
+	gr, _ = kv.Get(ctx, lastKey, opts...)
+
+	// skipping the first item, which the last item from the previous Get
+	for _, item := range gr.Kvs[1:] {
+		fmt.Println(string(item.Key), " ", string(item.Value))
+	}
+}
+
+func GetMultipleValuesWithPaginationDemoExp(ctx context.Context, kv client.KV) {
+	fmt.Println("*** GetMultipleValuesWithPaginationDemo()")
+	// Delete all keys
+	kv.Delete(ctx, "key", client.WithPrefix())
+
+	// Insert 20 keys
+	for i := 0; i < 20; i++ {
+		k := fmt.Sprintf("key_%02d", i)
+		kv.Put(ctx, k, strconv.Itoa(i))
+	}
+
+	opts := []client.OpOption{
+		client.WithFromKey(),
+		client.WithSort(client.SortByKey, client.SortAscend),
+		client.WithLimit(3),
+	}
+
+	gr, _ := kv.Get(ctx, "key", opts...)
+
+	fmt.Println("--- First page ---")
+	for _, item := range gr.Kvs {
+		fmt.Println(string(item.Key), string(item.Value))
+	}
+
+	lastKey := string(gr.Kvs[len(gr.Kvs)-1].Key)
+
+	fmt.Println("--- Second page ---")
+	opts = append(opts, client.WithFromKey())
+	gr, _ = kv.Get(ctx, lastKey, opts...)
+
+	// Skipping the first item, which the last item from from the previous Get
+	for _, item := range gr.Kvs[1:] {
+		fmt.Println(string(item.Key), string(item.Value))
+	}
 }
