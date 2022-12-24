@@ -23,9 +23,9 @@ func main() {
 
 	kv := client.NewKV(cli)
 
-	//GetSingleValueDemo(ctx, kv)
+	GetSingleValueDemo(ctx, kv)
 
-	//GetMultipleValuesWithPaginationDemo(ctx, kv)
+	GetMultipleValuesWithPaginationDemo(ctx, kv)
 
 	LeaseDemo(ctx, cli, kv)
 }
