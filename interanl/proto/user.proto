@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+package pb;
+option go_package=".;pb";
+
+message UserReq {}
+message UserResp {}
+
+service UserService {
+  rpc UserCallTest(UserReq) returns (UserResp);
+}
