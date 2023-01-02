@@ -20,12 +20,18 @@ type (
 		Hosts []string `yaml:"hosts"`
 		Name  string   `yaml:"name"`
 	}
+
+	telegram struct {
+		TokenID string `yaml:"tokenID"`
+		GroupID string `yaml:"groupID"`
+	}
 )
 
 var (
 	_c struct {
-		Etcd   etcd   `yaml:"etcd"`
-		RPCSvc rpcSvc `yaml:"rpcSvc"`
+		Etcd     etcd     `yaml:"etcd"`
+		RPCSvc   rpcSvc   `yaml:"rpcSvc"`
+		Telegram telegram `yaml:"telegram"`
 	}
 )
 
@@ -51,4 +57,8 @@ func Etcd() *etcd {
 
 func RPCSvc() *rpcSvc {
 	return &_c.RPCSvc
+}
+
+func Telegram() *telegram {
+	return &_c.Telegram
 }
