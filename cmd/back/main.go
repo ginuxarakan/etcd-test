@@ -3,7 +3,8 @@ package main
 import (
 	"context"
 	"ercd-test/cmd/back/handler"
-	"ercd-test/interanl/logger"
+	"ercd-test/internal/conf"
+	"ercd-test/internal/logger"
 	"flag"
 	"fmt"
 	"github.com/gin-gonic/gin"
@@ -19,6 +20,8 @@ func main() {
 	flag.Parse()
 
 	addr := fmt.Sprintf("0.0.0.0:%s", *port)
+
+	conf.InitYaml()
 
 	// router
 	router := gin.Default()

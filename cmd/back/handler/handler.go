@@ -2,9 +2,9 @@ package handler
 
 import (
 	"context"
-	"ercd-test/interanl/logger"
-	"ercd-test/interanl/pb"
-	"ercd-test/interanl/service"
+	"ercd-test/internal/logger"
+	"ercd-test/internal/pb"
+	"ercd-test/internal/service"
 	"github.com/gin-gonic/gin"
 )
 

@@ -2,8 +2,8 @@ package service
 
 import (
 	"context"
-	"ercd-test/interanl/logger"
-	"ercd-test/interanl/pb"
+	"ercd-test/internal/logger"
+	"ercd-test/internal/pb"
 	"fmt"
 	clientv3 "go.etcd.io/etcd/client/v3"
 	"go.etcd.io/etcd/client/v3/naming/resolver"

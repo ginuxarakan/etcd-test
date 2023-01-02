@@ -3,8 +3,8 @@ package main
 import (
 	"context"
 	"ercd-test/cmd/user/server"
-	"ercd-test/interanl/logger"
-	"ercd-test/interanl/pb"
+	"ercd-test/internal/logger"
+	"ercd-test/internal/pb"
 	"flag"
 	"fmt"
 	clientv3 "go.etcd.io/etcd/client/v3"

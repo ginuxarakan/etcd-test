@@ -2,8 +2,8 @@ package server
 
 import (
 	"context"
-	"ercd-test/interanl/logger"
-	"ercd-test/interanl/pb"
+	"ercd-test/internal/logger"
+	"ercd-test/internal/pb"
 )
 
 type UserService struct {
