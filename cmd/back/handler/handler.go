@@ -23,6 +23,7 @@ func NewHandler(c *HConfig) (*Handler, error) {
 		logger.Logrus.Error(err)
 		return nil, err
 	}
+	userSvc.Run()
 
 	return &Handler{
 		R:       c.R,
@@ -35,11 +36,19 @@ func (h *Handler) Register() {
 		"/",
 		func(c *gin.Context) {
 
-			if _, err := h.UserSvc.Client.UserCallTest(context.Background(), &pb.UserReq{}); err != nil {
+			if _, err := h.UserSvc.Client.UserCallTest(context.Background(), &pb.UserReq{Input: "1234567890"}); err != nil {
 				c.JSON(500, gin.H{
 					"data": err.Error(),
 				})
 			}
+
+			//if _, err := h.UserSvc.Client.StreamInput(context.Background(), &pb.StreamInputReq{
+			//	Input: "1234567890",
+			//}); err != nil {
+			//	c.JSON(500, gin.H{
+			//		"data": err.Error(),
+			//	})
+			//}
 
 			c.JSON(200, gin.H{
 				"data": "Success",

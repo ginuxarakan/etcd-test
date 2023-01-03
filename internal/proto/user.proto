@@ -3,7 +3,9 @@ syntax = "proto3";
 package pb;
 option go_package=".;pb";
 
-message UserReq {}
+message UserReq {
+  string input = 1;
+}
 message UserResp {}
 
 message StreamInputReq {
@@ -19,5 +21,5 @@ message StreamTestResp {
 service UserService {
   rpc UserCallTest(UserReq) returns (UserResp);
   rpc StreamInput(StreamInputReq) returns (StreamInputResp);
-  rpc StreamTest(StreamTestReq) returns (stream StreamInputResp);
+  rpc StreamTest(StreamTestReq) returns (stream StreamTestResp);
 }
