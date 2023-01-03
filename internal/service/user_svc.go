@@ -64,6 +64,8 @@ func NewUserService() (*UserSvc, error) {
 	}, nil
 }
 
+func (s *UserSvc) listenBalanceChange() {}
+
 func (s *UserSvc) Close() {
 	s.Conn.Close()
 }

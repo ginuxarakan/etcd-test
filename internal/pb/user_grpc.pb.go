@@ -23,6 +23,8 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type UserServiceClient interface {
 	UserCallTest(ctx context.Context, in *UserReq, opts ...grpc.CallOption) (*UserResp, error)
+	StreamInput(ctx context.Context, in *StreamInputReq, opts ...grpc.CallOption) (*StreamInputResp, error)
+	StreamTest(ctx context.Context, in *StreamTestReq, opts ...grpc.CallOption) (UserService_StreamTestClient, error)
 }
 
 type userServiceClient struct {
@@ -42,11 +44,54 @@ func (c *userServiceClient) UserCallTest(ctx context.Context, in *UserReq, opts 
 	return out, nil
 }
 
+func (c *userServiceClient) StreamInput(ctx context.Context, in *StreamInputReq, opts ...grpc.CallOption) (*StreamInputResp, error) {
+	out := new(StreamInputResp)
+	err := c.cc.Invoke(ctx, "/pb.UserService/StreamInput", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userServiceClient) StreamTest(ctx context.Context, in *StreamTestReq, opts ...grpc.CallOption) (UserService_StreamTestClient, error) {
+	stream, err := c.cc.NewStream(ctx, &UserService_ServiceDesc.Streams[0], "/pb.UserService/StreamTest", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &userServiceStreamTestClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type UserService_StreamTestClient interface {
+	Recv() (*StreamInputResp, error)
+	grpc.ClientStream
+}
+
+type userServiceStreamTestClient struct {
+	grpc.ClientStream
+}
+
+func (x *userServiceStreamTestClient) Recv() (*StreamInputResp, error) {
+	m := new(StreamInputResp)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 // UserServiceServer is the server API for UserService service.
 // All implementations must embed UnimplementedUserServiceServer
 // for forward compatibility
 type UserServiceServer interface {
 	UserCallTest(context.Context, *UserReq) (*UserResp, error)
+	StreamInput(context.Context, *StreamInputReq) (*StreamInputResp, error)
+	StreamTest(*StreamTestReq, UserService_StreamTestServer) error
 	mustEmbedUnimplementedUserServiceServer()
 }
 
@@ -56,6 +101,12 @@ type UnimplementedUserServiceServer struct {
 
 func (UnimplementedUserServiceServer) UserCallTest(context.Context, *UserReq) (*UserResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UserCallTest not implemented")
+}
+func (UnimplementedUserServiceServer) StreamInput(context.Context, *StreamInputReq) (*StreamInputResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method StreamInput not implemented")
+}
+func (UnimplementedUserServiceServer) StreamTest(*StreamTestReq, UserService_StreamTestServer) error {
+	return status.Errorf(codes.Unimplemented, "method StreamTest not implemented")
 }
 func (UnimplementedUserServiceServer) mustEmbedUnimplementedUserServiceServer() {}
 
@@ -88,6 +139,45 @@ func _UserService_UserCallTest_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
+func _UserService_StreamInput_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(StreamInputReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).StreamInput(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/pb.UserService/StreamInput",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).StreamInput(ctx, req.(*StreamInputReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _UserService_StreamTest_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(StreamTestReq)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(UserServiceServer).StreamTest(m, &userServiceStreamTestServer{stream})
+}
+
+type UserService_StreamTestServer interface {
+	Send(*StreamInputResp) error
+	grpc.ServerStream
+}
+
+type userServiceStreamTestServer struct {
+	grpc.ServerStream
+}
+
+func (x *userServiceStreamTestServer) Send(m *StreamInputResp) error {
+	return x.ServerStream.SendMsg(m)
+}
+
 // UserService_ServiceDesc is the grpc.ServiceDesc for UserService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -99,7 +189,17 @@ var UserService_ServiceDesc = grpc.ServiceDesc{
 			MethodName: "UserCallTest",
 			Handler:    _UserService_UserCallTest_Handler,
 		},
+		{
+			MethodName: "StreamInput",
+			Handler:    _UserService_StreamInput_Handler,
+		},
 	},
-	Streams:  []grpc.StreamDesc{},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "StreamTest",
+			Handler:       _UserService_StreamTest_Handler,
+			ServerStreams: true,
+		},
+	},
 	Metadata: "user.proto",
 }
