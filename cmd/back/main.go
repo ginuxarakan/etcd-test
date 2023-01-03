@@ -16,7 +16,7 @@ import (
 )
 
 func main() {
-	port := flag.String("port", "8050", "Http server Default port is 8050")
+	port := flag.String("port", "8090", "Http server Default port is 8090")
 	flag.Parse()
 
 	addr := fmt.Sprintf("0.0.0.0:%s", *port)

@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"ercd-test/internal/conf"
 	"ercd-test/internal/logger"
 	"ercd-test/internal/pb"
 	"fmt"
@@ -15,6 +16,8 @@ import (
 type UserSvc struct {
 	Conn   *grpc.ClientConn
 	Client pb.UserServiceClient
+
+	telegram *TelegramBot
 }
 
 func NewUserService() (*UserSvc, error) {
@@ -34,21 +37,19 @@ func NewUserService() (*UserSvc, error) {
 	}
 
 	svcConfig := fmt.Sprintf(`{"LoadBalancingPolicy": "%s"}`, roundrobin.Name)
-
-	logger.Logrus.Info(svcConfig)
-
 	opts := []grpc.DialOption{
 		grpc.WithResolvers(etcdResolver),
 		grpc.WithDefaultServiceConfig(svcConfig),
 		grpc.WithInsecure(),
-		grpc.WithBlock(),
+		//grpc.WithBlock(),
 	}
 	logger.Logrus.Info(etcdResolver)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	conn, err := grpc.DialContext(ctx, "etcd:///userRPC", opts...)
+	key := fmt.Sprintf("%s:///%s", conf.Etcd().Scheme, conf.RPCSvc().UserRPC.Name)
+	conn, err := grpc.DialContext(ctx, key, opts...)
 	if err != nil {
 		logger.Logrus.Error(err)
 		return nil, err
@@ -59,12 +60,48 @@ func NewUserService() (*UserSvc, error) {
 	logger.Logrus.Println("Connected to User RPC")
 
 	return &UserSvc{
-		Conn:   conn,
-		Client: client,
+		Conn:     conn,
+		Client:   client,
+		telegram: NewTelegramBot(conf.Telegram().TokenID, conf.Telegram().GroupID),
 	}, nil
 }
 
-func (s *UserSvc) listenBalanceChange() {}
+func (s *UserSvc) Run() {
+	s.listenBalanceChange()
+}
+
+func (s *UserSvc) listenBalanceChange() {
+	stream, err := s.Client.StreamTest(context.Background(), &pb.StreamTestReq{})
+	if err != nil {
+		logger.Logrus.Error(err)
+		return
+	}
+
+	go func() {
+		defer logger.Logrus.Info("Streaming end ...")
+		for {
+			value, err := stream.Recv()
+			if err != nil {
+				logger.Logrus.Error(err)
+				return
+			}
+
+			fmt.Println(value)
+			go func() {
+				fmt.Println("send to telegram")
+
+				msg := fmt.Sprintf("Stream: %v", value.Message)
+				_, err := s.telegram.SendMessage(msg)
+				if err != nil {
+					logger.Logrus.Error(err)
+					return
+				}
+				logger.Logrus.Debug("send to telegram success")
+			}()
+
+		}
+	}()
+}
 
 func (s *UserSvc) Close() {
 	s.Conn.Close()

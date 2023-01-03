@@ -69,7 +69,7 @@ func (c *userServiceClient) StreamTest(ctx context.Context, in *StreamTestReq, o
 }
 
 type UserService_StreamTestClient interface {
-	Recv() (*StreamInputResp, error)
+	Recv() (*StreamTestResp, error)
 	grpc.ClientStream
 }
 
@@ -77,8 +77,8 @@ type userServiceStreamTestClient struct {
 	grpc.ClientStream
 }
 
-func (x *userServiceStreamTestClient) Recv() (*StreamInputResp, error) {
-	m := new(StreamInputResp)
+func (x *userServiceStreamTestClient) Recv() (*StreamTestResp, error) {
+	m := new(StreamTestResp)
 	if err := x.ClientStream.RecvMsg(m); err != nil {
 		return nil, err
 	}
@@ -166,7 +166,7 @@ func _UserService_StreamTest_Handler(srv interface{}, stream grpc.ServerStream) 
 }
 
 type UserService_StreamTestServer interface {
-	Send(*StreamInputResp) error
+	Send(*StreamTestResp) error
 	grpc.ServerStream
 }
 
@@ -174,7 +174,7 @@ type userServiceStreamTestServer struct {
 	grpc.ServerStream
 }
 
-func (x *userServiceStreamTestServer) Send(m *StreamInputResp) error {
+func (x *userServiceStreamTestServer) Send(m *StreamTestResp) error {
 	return x.ServerStream.SendMsg(m)
 }
 

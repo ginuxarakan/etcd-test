@@ -5,6 +5,7 @@ import (
 	"ercd-test/internal/dto"
 	"ercd-test/internal/logger"
 	"ercd-test/internal/pb"
+	"fmt"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -16,21 +17,29 @@ type UserService struct {
 }
 
 func NewUserService() *UserService {
-	return &UserService{}
+	return &UserService{
+		messageChan: make(chan *dto.Message),
+	}
 }
 
 func (s *UserService) UserCallTest(ctx context.Context, in *pb.UserReq) (*pb.UserResp, error) {
-	logger.Logrus.Debug("From User RPC")
+	message := &dto.Message{}
+	if in.Input != "" {
+		fmt.Println(in.Input)
+		message.Message = in.Input
+		s.messageChan <- message
+	}
+	fmt.Println("From User RPC")
 	return &pb.UserResp{}, nil
 }
 
 func (s *UserService) StreamInput(ctx context.Context, in *pb.StreamInputReq) (*pb.StreamInputResp, error) {
 	message := &dto.Message{}
 	if in.Input != "" {
+		fmt.Println(in.Input)
 		message.Message = in.Input
+		s.messageChan <- message
 	}
-
-	s.messageChan <- message
 
 	return &pb.StreamInputResp{}, nil
 }
