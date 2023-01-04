@@ -3,7 +3,8 @@ package main
 import (
 	"context"
 	"ercd-test/cmd/back/handler"
-	"ercd-test/interanl/logger"
+	"ercd-test/internal/conf"
+	"ercd-test/internal/logger"
 	"flag"
 	"fmt"
 	"github.com/gin-gonic/gin"
@@ -15,10 +16,12 @@ import (
 )
 
 func main() {
-	port := flag.String("port", "8050", "Http server Default port is 8050")
+	port := flag.String("port", "8090", "Http server Default port is 8090")
 	flag.Parse()
 
 	addr := fmt.Sprintf("0.0.0.0:%s", *port)
+
+	conf.InitYaml()
 
 	// router
 	router := gin.Default()

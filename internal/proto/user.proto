@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package pb;
+option go_package=".;pb";
+
+message UserReq {
+  string input = 1;
+}
+message UserResp {}
+
+message StreamInputReq {
+  string input = 1;
+}
+message StreamInputResp {}
+
+message StreamTestReq {}
+message StreamTestResp {
+  string message = 1;
+}
+
+service UserService {
+  rpc UserCallTest(UserReq) returns (UserResp);
+  rpc StreamInput(StreamInputReq) returns (StreamInputResp);
+  rpc StreamTest(StreamTestReq) returns (stream StreamTestResp);
+}
